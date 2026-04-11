@@ -11,7 +11,11 @@ import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import com.example.polinotas.ui.screens.notes.Note
 import com.example.polinotas.ui.theme.AzulPrincipal
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Label
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun NoteItem(note: Note, navController: NavController) {
@@ -20,11 +24,14 @@ fun NoteItem(note: Note, navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable {
-                navController.navigate("noteDetail")
-            },
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
+            .heightIn(min = 90.dp) // 🔥 tamaño controlado
+            .clickable { navController.navigate("noteDetail")},
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White // 🔥 fondo blanco
+        )
+
+    )  {
 
         Row(
             modifier = Modifier.padding(12.dp)
@@ -58,11 +65,37 @@ fun NoteItem(note: Note, navController: NavController) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    note.category,
-                    fontSize = 12.sp,
-                    color = AzulPrincipal
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(
+                                Color.LightGray,
+                                shape = RoundedCornerShape(50) // 🔥 forma tipo cápsula
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.Label, // puedes cambiarlo luego
+                            contentDescription = "Categoría",
+                            modifier = Modifier.size(14.dp),
+                            tint = AzulPrincipal
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = note.category,
+                            fontSize = 12.sp,
+                            color = AzulPrincipal
+                        )
+                    }
+                }
             }
         }
     }

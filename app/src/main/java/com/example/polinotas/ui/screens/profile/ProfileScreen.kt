@@ -19,11 +19,11 @@ import androidx.navigation.NavController
 import com.example.polinotas.R
 import com.example.polinotas.ui.components.InfoCard
 import com.example.polinotas.ui.theme.*
+import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun ProfileScreen(title: String, navController: NavController) {
 
-    // 🔹 DATOS (luego Firebase)
     val nombre = "María González"
     val carrera = "Ingeniería de Sistemas"
     val correo = "maria@email.com"
@@ -39,7 +39,7 @@ fun ProfileScreen(title: String, navController: NavController) {
             .padding(16.dp)
     ) {
 
-        // 🔹 HEADER PERSONALIZADO
+        // 🔹 VOLVER
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -71,52 +71,90 @@ fun ProfileScreen(title: String, navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 CONTENEDOR PRINCIPAL
+        // 🔹 CONTENEDOR
         Card(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             elevation = CardDefaults.cardElevation(6.dp)
         ) {
 
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
+            Column {
 
-                // 🔹 HEADER PERFIL
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(AzulPrincipal)
-                        .padding(16.dp)
-                ) {
+                // 🔥 NUEVO HEADER CON IMAGEN FLOTANTE
+                Box {
+
+                    Column {
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .background(AzulPrincipal)
+                        )
+
+                        Spacer(modifier = Modifier.height(60.dp))
+                    }
 
                     Image(
                         painter = painterResource(id = R.drawable.perfil),
                         contentDescription = "Foto perfil",
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(100.dp)
+                            .align(Alignment.TopCenter)
+                            .offset(y = 60.dp)
                             .clip(CircleShape)
                     )
+                }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                // 🔹 INFO USUARIO (DEBAJO DE LA IMAGEN)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
 
-                    Column {
-                        Text(nombre, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text(carrera, color = Color.White)
-                        Text(correo, color = Color.White, fontSize = 12.sp)
-                    }
+                    Text(nombre, fontWeight = FontWeight.Bold)
+
+                    Text(carrera)
+
+                    Text(
+                        correo,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 🔹 ACERCA DE MI
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .height(100.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Acerca de mí", fontWeight = FontWeight.Bold)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Acerca de mí",
+                                tint = AzulPrincipal,
+                                modifier = Modifier.size(18.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Text(
+                                text = "Acerca de mí",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(acerca)
                     }
@@ -126,7 +164,9 @@ fun ProfileScreen(title: String, navController: NavController) {
 
                 // 🔹 MÉTRICAS
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
 

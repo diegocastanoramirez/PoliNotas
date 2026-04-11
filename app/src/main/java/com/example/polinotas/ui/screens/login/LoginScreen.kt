@@ -47,7 +47,7 @@ fun LoginScreen(navController: NavController) {
                     painter = painterResource(id = R.drawable.imagenlogin),
                     contentDescription = "Logo",
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(120.dp)
                         .clip(CircleShape)
                 )
 
@@ -57,14 +57,16 @@ fun LoginScreen(navController: NavController) {
                 Text(
                     "Poli Notas",
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = AzulPrincipal // 🔥 mismo azul del fondo
                 )
 
                 // 🔹 SUBTÍTULO
                 Text(
                     "Politécnico Grancolombiano",
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    fontWeight = FontWeight.SemiBold, // 🔥 más grueso
+                    color = Color.DarkGray
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -74,7 +76,14 @@ fun LoginScreen(navController: NavController) {
                     value = email.value,
                     onValueChange = { email.value = it },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp), // 🔥 bordes redondos
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Gray,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = Color.Gray,
+                        cursorColor = Color.Gray
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -84,7 +93,14 @@ fun LoginScreen(navController: NavController) {
                     value = password.value,
                     onValueChange = { password.value = it },
                     label = { Text("Contraseña") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Gray,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = Color.Gray,
+                        cursorColor = Color.Gray
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -107,9 +123,9 @@ fun LoginScreen(navController: NavController) {
 
                 // 🔹 OLVIDÓ CONTRASEÑA
                 Text(
-                    "¿Olvidó contraseña?",
+                    "¿Olvidaste tu contraseña?",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AzulClaro
                 )
             }
         }
