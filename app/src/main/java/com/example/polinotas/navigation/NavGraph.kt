@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.polinotas.ui.screens.login.LoginScreen
+import com.example.polinotas.ui.screens.notes.CreateNoteScreen
 import com.example.polinotas.ui.screens.notes.NoteDetailScreen
 import com.example.polinotas.ui.screens.notes.NotesScreen
 import com.example.polinotas.ui.screens.profile.ProfileScreen
@@ -25,6 +26,10 @@ fun PoliNotasApp() {
 
             ProfileScreen(title, navController)
         }
-        composable("noteDetail") { NoteDetailScreen() }
+        composable("noteCreate") { CreateNoteScreen(navController) }
+        composable("noteDetail/{noteId}") { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+            NoteDetailScreen(noteId = noteId, navController = navController)
+        }
     }
 }

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.foundation.layout.android)
     implementation(libs.foundation.layout.android)
+    implementation(libs.androidx.compose.ui.text)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -77,4 +78,5 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.ui.tooling.preview)
     debugImplementation(libs.ui.tooling)
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }
