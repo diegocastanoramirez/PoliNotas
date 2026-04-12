@@ -1,5 +1,4 @@
 package com.example.polinotas.ui.screens.notes
-import NoteItem
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -28,13 +29,8 @@ fun NotesScreen(navController: NavController) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // 🔹 DATOS
-    val notes = listOf(
-        Note("Matemáticas", "Estudiar derivadas", "Estudio", R.drawable.nota1),
-        Note("Programación", "Practicar Kotlin", "Trabajo", R.drawable.nota2),
-        Note("Base de datos", "Repasar joins", "Estudio", R.drawable.nota3),
-        Note("Inglés", "Aprender verbos", "Personal", R.drawable.nota4)
-    )
+    // 🔹 DATOS centralizados en el repositorio mock (fuente unica para lista y detalle)
+    val notes = NotesMockRepository.getAll()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -75,36 +71,52 @@ fun NotesScreen(navController: NavController) {
     ) {
 
         Scaffold(
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { navController.navigate("noteCreate") },
+                    containerColor = Amarillo,
+                    contentColor = AzulPrincipal
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Crear nota"
+                    )
+                }
+            },
 
             topBar = {
 
-                // 🔥 HEADER PERSONALIZADO
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(AzulPrincipal)
-                        .clickable {
-                            scope.launch { drawerState.open() }
-                        }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    Image(
-                        painter = painterResource(id = R.drawable.perfil),
-                        contentDescription = "Perfil",
+                    Row(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
+                            .fillMaxWidth()
+                            .background(AzulPrincipal)
+                            .clickable {
+                                scope.launch { drawerState.open() }
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.perfil),
+                            contentDescription = "Perfil",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                    Text(
-                        "Poli Notas",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Text(
+                            "Poli Notas",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -135,7 +147,7 @@ fun NotesScreen(navController: NavController) {
                 // 🔹 LISTA
                 LazyColumn {
 
-                    items(notes) { note ->
+                    items(items = notes, key = { it.id }) { note ->
                         NoteItem(note, navController)
                     }
                 }
