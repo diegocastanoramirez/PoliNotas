@@ -68,23 +68,63 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 
+/*
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * PANTALLA: CreateNoteScreen
+ * DESCRIPCIÓN: Formulario para crear una nueva nota con múltiples campos
+ *
+ * PUNTO C - IDENTIFICADORES Y PROPIEDADES:
+ * Esta pantalla contiene un formulario completo con validación y preview de imagen
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateNoteScreen(navController: NavController) {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IDENTIFICADORES - VARIABLES DE ESTADO DEL FORMULARIO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // IDENTIFICADOR: title - Título de la nota
     var title by remember { mutableStateOf("") }
+
+    // IDENTIFICADOR: description - Descripción breve de la nota
     var description by remember { mutableStateOf("") }
+
+    // IDENTIFICADOR: category - Categoría seleccionada
     var category by remember { mutableStateOf("") }
+
+    // IDENTIFICADOR: content - Contenido principal (markdown)
     var content by remember { mutableStateOf("") }
+
+    // IDENTIFICADOR: isFavorite - Estado de favorito (true/false)
     var isFavorite by remember { mutableStateOf(false) }
+
+    // IDENTIFICADOR: imageUrl - URL de imagen principal
     var imageUrl by remember { mutableStateOf("") }
+
+    // IDENTIFICADOR: categoryExpanded - Estado del dropdown de categorías
     var categoryExpanded by remember { mutableStateOf(false) }
+
+    // IDENTIFICADOR: showNewCategoryDialog - Muestra diálogo de nueva categoría
     var showNewCategoryDialog by remember { mutableStateOf(false) }
+
+    // IDENTIFICADOR: newCategoryName - Nombre de nueva categoría temporal
     var newCategoryName by remember { mutableStateOf("") }
+
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // IDENTIFICADOR: isValidRemoteUrl - Validación de URL
     val isValidRemoteUrl = imageUrl.startsWith("http://") || imageUrl.startsWith("https://")
+
+    // IDENTIFICADOR: canPreview - Permite mostrar preview de imagen
     val canPreview = imageUrl.isNotBlank() && isValidRemoteUrl && Patterns.WEB_URL.matcher(imageUrl).matches()
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IDENTIFICADOR: categories
+    // TIPO: MutableStateList<String> (lista dinámica de categorías)
+    // USO: Almacena las categorías disponibles para el dropdown
+    // ═══════════════════════════════════════════════════════════════════════════
     val categories = remember {
         mutableStateListOf(
             "Programacion",
@@ -198,6 +238,15 @@ fun CreateNoteScreen(navController: NavController) {
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: titleLabel
+                            // TIPO: Text (etiqueta)
+                            // PROPIEDADES:
+                            //   - text: "Titulo"
+                            //   - style: labelLarge
+                            //   - color: AzulPrincipal
+                            //   - fontWeight: SemiBold
+                            // ═══════════════════════════════════════════════════════════
                             Text(
                                 text = "Titulo",
                                 style = MaterialTheme.typography.labelLarge,
@@ -207,6 +256,17 @@ fun CreateNoteScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: titleTextField
+                            // TIPO: OutlinedTextField (campo de texto)
+                            // PROPIEDADES:
+                            //   - value: title (vinculado a variable)
+                            //   - onValueChange: Actualiza title
+                            //   - placeholder: "Escribe el titulo de tu nota aquí..."
+                            //   - modifier.fillMaxWidth(): Ancho completo
+                            // VARIABLE VINCULADA: title (String)
+                            // EVENTO: onValueChange actualiza title
+                            // ═══════════════════════════════════════════════════════════
                             OutlinedTextField(
                                 value = title,
                                 onValueChange = { title = it },
@@ -223,6 +283,13 @@ fun CreateNoteScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // ═══════════════════════════════════════════════════════════════
+                    // IDENTIFICADOR: descriptionCard
+                    // TIPO: Card
+                    // PROPIEDADES:
+                    //   - shape: RoundedCornerShape(16.dp)
+                    //   - elevation: 6.dp
+                    // ═══════════════════════════════════════════════════════════════
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -240,6 +307,16 @@ fun CreateNoteScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: descriptionTextField
+                            // TIPO: OutlinedTextField
+                            // PROPIEDADES:
+                            //   - value: description (vinculado)
+                            //   - onValueChange: Actualiza description
+                            //   - placeholder: "Breve descripcion de la nota..."
+                            //   - modifier.fillMaxWidth()
+                            // VARIABLE VINCULADA: description (String)
+                            // ═══════════════════════════════════════════════════════════
                             OutlinedTextField(
                                 value = description,
                                 onValueChange = { description = it },
@@ -256,6 +333,10 @@ fun CreateNoteScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // ═══════════════════════════════════════════════════════════════
+                    // IDENTIFICADOR: categoryCard
+                    // TIPO: Card
+                    // ═══════════════════════════════════════════════════════════════
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -282,10 +363,29 @@ fun CreateNoteScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: categoryDropdown
+                            // TIPO: ExposedDropdownMenuBox (selector desplegable)
+                            // PROPIEDADES:
+                            //   - expanded: categoryExpanded (estado abierto/cerrado)
+                            //   - onExpandedChange: Toggle categoryExpanded
+                            // VARIABLE VINCULADA: categoryExpanded (Boolean)
+                            // ═══════════════════════════════════════════════════════════
                             ExposedDropdownMenuBox(
                                 expanded = categoryExpanded,
                                 onExpandedChange = { categoryExpanded = !categoryExpanded }
                             ) {
+                                // ═══════════════════════════════════════════════════════
+                                // IDENTIFICADOR: categoryTextField
+                                // TIPO: OutlinedTextField (campo de solo lectura)
+                                // PROPIEDADES:
+                                //   - value: category
+                                //   - readOnly: true (no editable directamente)
+                                //   - placeholder: "Selecciona una categoria"
+                                //   - trailingIcon: Flecha del dropdown
+                                //   - modifier.fillMaxWidth()
+                                // VARIABLE VINCULADA: category (String)
+                                // ═══════════════════════════════════════════════════════
                                 OutlinedTextField(
                                     value = category,
                                     onValueChange = {},
@@ -304,6 +404,12 @@ fun CreateNoteScreen(navController: NavController) {
                                         .menuAnchor()
                                 )
 
+                                // ═══════════════════════════════════════════════════════
+                                // IDENTIFICADOR: categoryMenu
+                                // TIPO: ExposedDropdownMenu (menú desplegable)
+                                // CONTENIDO: Lista de categorías + opción "Agregar nueva"
+                                // EVENTO: onClick en item → Actualiza category
+                                // ═══════════════════════════════════════════════════════
                                 ExposedDropdownMenu(
                                     expanded = categoryExpanded,
                                     onDismissRequest = { categoryExpanded = false }
@@ -349,6 +455,17 @@ fun CreateNoteScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: contentTextField
+                            // TIPO: OutlinedTextField (campo multilínea)
+                            // PROPIEDADES:
+                            //   - value: content (vinculado)
+                            //   - onValueChange: Actualiza content
+                            //   - placeholder: "Escribe el contenido de tu nota aquí..."
+                            //   - minLines: 6 (mínimo 6 líneas visibles)
+                            //   - modifier.fillMaxWidth()
+                            // VARIABLE VINCULADA: content (String)
+                            // ═══════════════════════════════════════════════════════════
                             OutlinedTextField(
                                 value = content,
                                 onValueChange = { content = it },
@@ -366,6 +483,11 @@ fun CreateNoteScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // ═══════════════════════════════════════════════════════════════
+                    // IDENTIFICADOR: imageCard
+                    // TIPO: Card
+                    // DESCRIPCIÓN: Card para URL de imagen con preview
+                    // ═══════════════════════════════════════════════════════════════
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -392,6 +514,20 @@ fun CreateNoteScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: imageUrlTextField
+                            // TIPO: OutlinedTextField
+                            // PROPIEDADES:
+                            //   - value: imageUrl (vinculado)
+                            //   - onValueChange: Actualiza imageUrl
+                            //   - placeholder: "https://ejemplo.com/imagen.jpg"
+                            //   - singleLine: true
+                            //   - shape: RoundedCornerShape(12.dp)
+                            //   - colors.focusedBorderColor: AzulPrincipal
+                            //   - colors.unfocusedBorderColor: Gray
+                            // VARIABLE VINCULADA: imageUrl (String)
+                            // VALIDACIÓN: Usado por canPreview para mostrar preview
+                            // ═══════════════════════════════════════════════════════════
                             OutlinedTextField(
                                 value = imageUrl,
                                 onValueChange = { imageUrl = it },
@@ -419,6 +555,15 @@ fun CreateNoteScreen(navController: NavController) {
                                 modifier = Modifier.padding(top = 8.dp)
                             )
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: imagePreview
+                            // TIPO: Card con AsyncImage (condicional)
+                            // CONDICIÓN: Solo visible si canPreview == true
+                            // PROPIEDADES:
+                            //   - modifier.fillMaxWidth().height(160.dp)
+                            //   - shape: RoundedCornerShape(12.dp)
+                            //   - Image contentScale: Crop
+                            // ═══════════════════════════════════════════════════════════
                             if (canPreview) {
                                 val previewPainter = rememberAsyncImagePainter(model = imageUrl)
                                 if (previewPainter.state !is AsyncImagePainter.State.Error) {
@@ -443,6 +588,19 @@ fun CreateNoteScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // IDENTIFICADOR: saveButton
+            // TIPO: Button (botón de acción primaria)
+            // PROPIEDADES:
+            //   - onClick: Crea nueva nota y navega atrás
+            //   - modifier.fillMaxWidth(): Ancho completo
+            //   - text: "Guardar nota"
+            // VALIDACIÓN:
+            //   - Verifica que title, description, content, imageUrl no estén vacíos
+            // EVENTO: onClick → Crea NoteDetailUi, agrega a repositorio, navega atrás
+            // MÉTODO: NotesMockRepository.add(newNote)
+            // VARIABLES VINCULADAS: title, description, category, content, isFavorite, imageUrl
+            // ═══════════════════════════════════════════════════════════════════════
             Button(
                 onClick = {
                     if (title.isBlank() || description.isBlank() || content.isBlank() || imageUrl.isBlank()) return@Button
@@ -454,7 +612,7 @@ fun CreateNoteScreen(navController: NavController) {
                         createdAtLabel = formattedDate,
                         category = if (category.isBlank()) "Sin categoria" else category,
                         isFavorite = isFavorite,
-                        imageRes = 0, // No usamos recursos locales para notas creadas
+                        imageRes = 0,
                         imageUrl = imageUrl,
                         markdownContent = content,
                         plainContent = content,
