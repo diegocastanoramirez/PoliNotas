@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,7 +46,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -67,6 +68,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.polinotas.R
@@ -75,6 +79,7 @@ import com.example.polinotas.ui.theme.Amarillo
 import kotlinx.coroutines.launch
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.material3.TabRow
 import androidx.compose.ui.viewinterop.AndroidView
 
 /*
@@ -124,16 +129,42 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
 
     // IDENTIFICADOR: editableDescription - Descripción editable
     var editableDescription by remember(note.id) { mutableStateOf(note.description) }
+    var editableContent by remember(note.id) { mutableStateOf(note.markdownContent) }
+    var editableImageUrl by remember(note.id) { mutableStateOf(note.imageUrl) }
+    var editableVideoUrl by remember(note.id) { mutableStateOf(note.videoUrl) }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) editableImageUrl = uri.toString()
+    }
+
+    val pickVideoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) editableVideoUrl = uri.toString()
+    }
 
     // IDENTIFICADOR: editableContent - Contenido editable
     var editableContent by remember(note.id) { mutableStateOf(note.markdownContent) }
 
-    // Sincroniza variables editables cuando cambia la nota
-    LaunchedEffect(note.id, note.title, note.description, note.markdownContent) {
+    LaunchedEffect(
+        note.id,
+        note.title,
+        note.description,
+        note.markdownContent,
+        note.imageUrl,
+        note.videoUrl
+    ) {
         editableTitle = note.title
         editableDescription = note.description
         editableContent = note.markdownContent
+        editableImageUrl = note.imageUrl
+        editableVideoUrl = note.videoUrl
     }
+
+    val displayedImageUrl = editableImageUrl
+    val displayedVideoUrl = editableVideoUrl
 
     Scaffold(
         topBar = {
@@ -292,13 +323,15 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                                         editableTitle = note.title
                                         editableDescription = note.description
                                         editableContent = note.markdownContent
+                                        editableImageUrl = note.imageUrl
+                                        editableVideoUrl = note.videoUrl
                                     }
                                     isEditing = !isEditing
                                 }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Editar",
+                                    contentDescription = if (isEditing) "Cancelar edición" else "Editar",
                                     tint = AzulPrincipal
                                 )
                             }
@@ -365,9 +398,9 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                if (note.imageUrl.isNotBlank()) {
+                if (displayedImageUrl.isNotBlank()) {
                     AsyncImage(
-                        model = note.imageUrl,
+                        model = displayedImageUrl,
                         contentDescription = note.title,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -489,7 +522,10 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                                             title = editableTitle,
                                             description = editableDescription,
                                             markdownContent = editableContent,
-                                            plainContent = editableContent
+                                            plainContent = editableContent,
+                                            imageUrl = editableImageUrl,
+                                            videoUrl = editableVideoUrl,
+                                            hasVideo = editableVideoUrl.isNotBlank()
                                         )
                                         NotesMockRepository.update(updatedNote)
                                         isEditing = false
@@ -518,11 +554,53 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Galeria de imagenes", color = AzulPrincipal, fontWeight = FontWeight.Bold)
+                            if (isEditing) {
+                                Text(
+                                    text = "Editar imagen",
+                                    color = AzulPrincipal,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { pickImageLauncher.launch("image/*") }) {
+                                        Icon(Icons.Default.Image, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Galería")
+                                    }
+
+                                    Button(onClick = { editableImageUrl = "" }) {
+                                        Icon(Icons.Default.Delete, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Quitar")
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                OutlinedTextField(
+                                    value = editableImageUrl,
+                                    onValueChange = { editableImageUrl = it },
+                                    label = { Text("URL de imagen o URI") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            Text(
+                                "Galeria de imagenes",
+                                color = AzulPrincipal,
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            if (note.gallery.isEmpty() && note.imageUrl.isBlank()) {
-                                EmptyState(icon = Icons.Default.Image, message = "No hay imagenes en esta nota")
+                            if (displayedImageUrl.isBlank() && note.gallery.isEmpty()) {
+                                EmptyState(
+                                    icon = Icons.Default.Image,
+                                    message = "No hay imagenes en esta nota"
+                                )
                             } else {
                                 FlowRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -551,6 +629,23 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                                     }
                                 }
                             }
+
+                            if (isEditing) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = {
+                                        NotesMockRepository.update(
+                                            note.copy(imageUrl = editableImageUrl)
+                                        )
+                                        isEditing = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.Save, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Guardar imagen")
+                                }
+                            }
                         }
                     }
                 }
@@ -563,16 +658,100 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            if (note.hasVideo)  {
-                                /* TODO compartir */
+                            if (isEditing) {
+                                Text(
+                                    text = "Editar video",
+                                    color = AzulPrincipal,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Button(onClick = { pickVideoLauncher.launch("video/*") }) {
+                                        Icon(Icons.Default.UploadFile, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(if (editableVideoUrl.isBlank()) "Cargar video" else "Cambiar video")
+                                    }
+
+                                    if (editableVideoUrl.isNotBlank()) {
+                                        Button(onClick = { editableVideoUrl = "" }) {
+                                            Icon(Icons.Default.Delete, contentDescription = null)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Quitar")
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            if (shouldUseVideoView(displayedVideoUrl)) {
+                                AndroidView(
+                                    factory = { context ->
+                                        val videoView = android.widget.VideoView(context)
+                                        val mediaController = android.widget.MediaController(context).apply {
+                                            setAnchorView(videoView)
+                                        }
+                                        videoView.setMediaController(mediaController)
+                                        videoView.setVideoURI(displayedVideoUrl.toUri())
+                                        videoView.setOnPreparedListener {
+                                            videoView.start()
+                                            videoView.pause()
+                                        }
+                                        videoView
+                                    },
+                                    update = { videoView ->
+                                        val uri = displayedVideoUrl.toUri()
+                                        if (videoView.tag != uri.toString()) {
+                                            videoView.tag = uri.toString()
+                                            videoView.setVideoURI(uri)
+                                            videoView.setOnPreparedListener {
+                                                videoView.start()
+                                                videoView.pause()
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(220.dp)
+                                )
                             } else {
-                                EmptyState(icon = Icons.Default.PlayArrow, message = "No hay video en esta nota")
+                                EmptyState(
+                                    icon = Icons.Default.PlayArrow,
+                                    message = "No hay video en esta nota"
+                                )
+                            }
+
+                            if (isEditing) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = {
+                                        NotesMockRepository.update(
+                                            note.copy(
+                                                videoUrl = editableVideoUrl,
+                                                hasVideo = editableVideoUrl.isNotBlank()
+                                            )
+                                        )
+                                        isEditing = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.Save, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Guardar video")
+                                }
                             }
                         }
                     }
                 }
-            }
 
+
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
             var url by remember { mutableStateOf("") }
@@ -630,7 +809,6 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                     }
                 }
             }
-
 
         }
     }
