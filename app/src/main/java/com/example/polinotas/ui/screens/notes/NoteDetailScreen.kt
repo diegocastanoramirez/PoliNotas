@@ -82,15 +82,35 @@ import android.webkit.WebViewClient
 import androidx.compose.material3.TabRow
 import androidx.compose.ui.viewinterop.AndroidView
 
+/*
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * PANTALLA: NoteDetailScreen
+ * DESCRIPCIÓN: Visualización y edición de detalles completos de una nota
+ *
+ * PUNTO C - IDENTIFICADORES Y PROPIEDADES:
+ * Incluye modo edición, tabs (Contenido/Fotos/Video), favoritos, eliminación
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NoteDetailScreen(noteId: String, navController: NavController) {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IDENTIFICADORES - VARIABLES DE ESTADO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // IDENTIFICADOR: selectedTab - Índice del tab activo (0=Contenido, 1=Fotos, 2=Video)
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    // IDENTIFICADOR: showMarkdown - Toggle entre vista Markdown/Texto plano
     var showMarkdown by remember { mutableStateOf(true) }
+
+    // IDENTIFICADOR: isEditing - Estado de modo edición (true/false)
     var isEditing by remember { mutableStateOf(false) }
+
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    // IDENTIFICADOR: note - Objeto de nota cargado desde repositorio
     val note = NotesMockRepository.getById(noteId)
 
     if (note == null) {
@@ -100,7 +120,14 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
         return
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IDENTIFICADORES - VARIABLES EDITABLES (para modo edición)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // IDENTIFICADOR: editableTitle - Título editable (copia temporal de note.title)
     var editableTitle by remember(note.id) { mutableStateOf(note.title) }
+
+    // IDENTIFICADOR: editableDescription - Descripción editable
     var editableDescription by remember(note.id) { mutableStateOf(note.description) }
     var editableContent by remember(note.id) { mutableStateOf(note.markdownContent) }
     var editableImageUrl by remember(note.id) { mutableStateOf(note.imageUrl) }
@@ -118,6 +145,8 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
         if (uri != null) editableVideoUrl = uri.toString()
     }
 
+    // IDENTIFICADOR: editableContent - Contenido editable
+    var editableContent by remember(note.id) { mutableStateOf(note.markdownContent) }
 
     LaunchedEffect(
         note.id,
@@ -198,6 +227,15 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                     }
 
                     Row {
+                        // ═══════════════════════════════════════════════════════════
+                        // IDENTIFICADOR: favoriteButton
+                        // TIPO: IconButton
+                        // PROPIEDADES:
+                        //   - Icon: Star (llena) o StarOutline según note.isFavorite
+                        //   - tint: Amarillo si favorito, AzulPrincipal si no
+                        // EVENTO: onClick → Toggle favorito y actualiza en repositorio
+                        // MÉTODO: NotesMockRepository.update()
+                        // ═══════════════════════════════════════════════════════════
                         IconButton(onClick = {
                             NotesMockRepository.update(note.copy(isFavorite = !note.isFavorite))
                         }) {
@@ -208,6 +246,14 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                             )
                         }
 
+                        // ═══════════════════════════════════════════════════════════
+                        // IDENTIFICADOR: shareButton
+                        // TIPO: IconButton
+                        // PROPIEDADES:
+                        //   - Icon: Share
+                        //   - tint: AzulPrincipal
+                        // EVENTO: onClick → TODO (pendiente implementar)
+                        // ═══════════════════════════════════════════════════════════
                         IconButton(onClick = { /* TODO compartir */ }) {
                             Icon(
                                 imageVector = Icons.Default.Share,
@@ -259,6 +305,18 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                         }
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: editButton
+                            // TIPO: IconButton
+                            // PROPIEDADES:
+                            //   - Icon: Edit
+                            //   - tint: AzulPrincipal
+                            // EVENTO: onClick → Toggle modo edición (isEditing)
+                            // LÓGICA:
+                            //   - Si estaba editando: restaura valores originales
+                            //   - Si no: activa modo edición
+                            // VARIABLES AFECTADAS: isEditing, editableTitle, editableDescription, editableContent
+                            // ═══════════════════════════════════════════════════════════
                             IconButton(
                                 onClick = {
                                     if (isEditing) {
@@ -278,6 +336,15 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                                 )
                             }
 
+                            // ═══════════════════════════════════════════════════════════
+                            // IDENTIFICADOR: deleteButton
+                            // TIPO: IconButton
+                            // PROPIEDADES:
+                            //   - Icon: Delete
+                            //   - tint: Color(0xFFC62828) - Rojo de advertencia
+                            // EVENTO: onClick → Elimina nota y navega atrás
+                            // MÉTODO: NotesMockRepository.delete(noteId)
+                            // ═══════════════════════════════════════════════════════════
                             IconButton(
                                 onClick = {
                                     NotesMockRepository.delete(note.id)
@@ -354,7 +421,21 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // IDENTIFICADOR: tabs
+            // TIPO: List<String> (lista de títulos de tabs)
+            // VALOR: ["Contenido", "Fotos", "Video"]
+            // ═══════════════════════════════════════════════════════════════════════
             val tabs = listOf("Contenido", "Fotos", "Video")
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // IDENTIFICADOR: tabRow
+            // TIPO: TabRow (barra de pestañas)
+            // PROPIEDADES:
+            //   - selectedTabIndex: selectedTab (índice activo)
+            // EVENTO: onClick en Tab → Actualiza selectedTab
+            // VARIABLE VINCULADA: selectedTab (Int)
+            // ═══════════════════════════════════════════════════════════════════════
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
@@ -363,6 +444,14 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // IDENTIFICADOR: tabContent
+            // TIPO: when (condicional según selectedTab)
+            // CONTENIDO:
+            //   - 0: Contenido (texto markdown/plano con modo edición)
+            //   - 1: Fotos (galería de imágenes)
+            //   - 2: Video (placeholder)
+            // ═══════════════════════════════════════════════════════════════════════
             when (selectedTab) {
                 0 -> {
                     Card(
@@ -416,6 +505,17 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
+                                // ═══════════════════════════════════════════════════════
+                                // IDENTIFICADOR: saveEditButton
+                                // TIPO: Button
+                                // PROPIEDADES:
+                                //   - onClick: Guarda cambios y sale de modo edición
+                                //   - modifier.fillMaxWidth()
+                                //   - Icon: Save + Text "Guardar"
+                                // EVENTO: onClick → Actualiza nota en repositorio
+                                // MÉTODO: NotesMockRepository.update(updatedNote)
+                                // VARIABLES VINCULADAS: editableTitle, editableDescription, editableContent, isEditing
+                                // ═══════════════════════════════════════════════════════
                                 Button(
                                     onClick = {
                                         val updatedNote = note.copy(
