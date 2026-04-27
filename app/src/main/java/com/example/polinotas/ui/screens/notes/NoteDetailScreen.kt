@@ -73,7 +73,9 @@ import com.example.polinotas.R
 import com.example.polinotas.ui.theme.AzulPrincipal
 import com.example.polinotas.ui.theme.Amarillo
 import kotlinx.coroutines.launch
-
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.ui.viewinterop.AndroidView
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -470,6 +472,66 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            var url by remember { mutableStateOf("") }
+            var currentUrl by remember { mutableStateOf("") }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+
+                    Text(
+                        text = "Navegador Web",
+                        color = AzulPrincipal,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = { url = it },
+                        label = { Text("Ingresa una URL") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            currentUrl = if (url.startsWith("http")) url else "https://$url"
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Cargar página")
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (currentUrl.isNotEmpty()) {
+                        AndroidView(
+                            factory = { context ->
+                                WebView(context).apply {
+                                    webViewClient = WebViewClient()
+                                    settings.javaScriptEnabled = true
+                                    loadUrl(currentUrl)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(800.dp)
+                        )
+                    }
+                }
+            }
+
+
         }
     }
 }
