@@ -19,5 +19,6 @@ data class NoteDetailUi(
     val markdownContent: String,
     val plainContent: String,
     val gallery: List<Int>,
-    val hasVideo: Boolean
+    val hasVideo: Boolean,
+    val videoUrl: String = ""
 )

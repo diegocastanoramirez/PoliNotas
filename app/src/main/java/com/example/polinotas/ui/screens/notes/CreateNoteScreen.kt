@@ -36,10 +36,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -56,6 +59,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.core.net.toUri
 import com.example.polinotas.R
 import com.example.polinotas.ui.theme.Amarillo
 import com.example.polinotas.ui.theme.AzulPrincipal
@@ -64,9 +68,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material.icons.filled.Label
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.Delete
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,13 +84,21 @@ fun CreateNoteScreen(navController: NavController) {
     var content by remember { mutableStateOf("") }
     var isFavorite by remember { mutableStateOf(false) }
     var imageUrl by remember { mutableStateOf("") }
+    var videoUrl by remember { mutableStateOf("") }
     var categoryExpanded by remember { mutableStateOf(false) }
     var showNewCategoryDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val isValidRemoteUrl = imageUrl.startsWith("http://") || imageUrl.startsWith("https://")
-    val canPreview = imageUrl.isNotBlank() && isValidRemoteUrl && Patterns.WEB_URL.matcher(imageUrl).matches()
+    val canPreview =
+        imageUrl.isNotBlank() && isValidRemoteUrl && Patterns.WEB_URL.matcher(imageUrl).matches()
+
+    val pickVideoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        videoUrl = uri?.toString().orEmpty()
+    }
 
     val categories = remember {
         mutableStateListOf(
@@ -215,7 +230,8 @@ fun CreateNoteScreen(navController: NavController) {
                                         text = "Escribe el titulo de tu nota aquí...",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray,
-                                    )},
+                                    )
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -248,7 +264,8 @@ fun CreateNoteScreen(navController: NavController) {
                                         text = "Breve descripcion de la nota...",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray,
-                                    )},
+                                    )
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -295,7 +312,8 @@ fun CreateNoteScreen(navController: NavController) {
                                             text = "Selecciona una categoria",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = Color.Gray,
-                                        )},
+                                        )
+                                    },
                                     trailingIcon = {
                                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
                                     },
@@ -341,10 +359,10 @@ fun CreateNoteScreen(navController: NavController) {
                         Column(modifier = Modifier.padding(16.dp)) {
 
                             Text(
-                                    text = "Contenido",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = AzulPrincipal,
-                                    fontWeight = FontWeight.SemiBold
+                                text = "Contenido",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = AzulPrincipal,
+                                fontWeight = FontWeight.SemiBold
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -357,14 +375,15 @@ fun CreateNoteScreen(navController: NavController) {
                                         text = "Escribe el contenido de tu nota aquí...",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray,
-                                    )},
+                                    )
+                                },
                                 minLines = 6,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -400,7 +419,8 @@ fun CreateNoteScreen(navController: NavController) {
                                         text = "https://ejemplo.com/imagen.jpg",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray,
-                                    )},
+                                    )
+                                },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
@@ -424,7 +444,9 @@ fun CreateNoteScreen(navController: NavController) {
                                 if (previewPainter.state !is AsyncImagePainter.State.Error) {
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().height(160.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(160.dp),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
                                         Image(
@@ -434,6 +456,94 @@ fun CreateNoteScreen(navController: NavController) {
                                             contentScale = ContentScale.Crop
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Videocam,
+                                    contentDescription = null,
+                                    tint = AzulPrincipal,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Video para la nota (Opcional)",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = AzulPrincipal,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(onClick = { pickVideoLauncher.launch("video/*") }) {
+                                    Icon(Icons.Default.UploadFile, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(if (videoUrl.isBlank()) "Cargar video" else "Cambiar video")
+                                }
+
+                                if (videoUrl.isNotBlank()) {
+                                    Button(onClick = { videoUrl = "" }) {
+                                        Icon(Icons.Default.Delete, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Quitar")
+                                    }
+                                }
+                            }
+
+                            if (shouldUseVideoView(videoUrl)) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(220.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    AndroidView(
+                                        modifier = Modifier.fillMaxSize(),
+                                        factory = { context ->
+                                            android.widget.VideoView(context).apply {
+                                                val mediaController = android.widget.MediaController(context)
+                                                mediaController.setAnchorView(this)
+                                                setMediaController(mediaController)
+                                                setVideoURI(videoUrl.toUri())
+                                                setOnPreparedListener {
+                                                    mediaController.show()
+                                                    start()
+                                                    pause()
+                                                }
+                                            }
+                                        },
+                                        update = { videoView ->
+                                            val uri = videoUrl.toUri()
+                                            if (videoView.tag != uri.toString()) {
+                                                videoView.tag = uri.toString()
+                                                videoView.setVideoURI(uri)
+                                                videoView.setOnPreparedListener {
+                                                    videoView.start()
+                                                    videoView.pause()
+                                                }
+                                            }
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -459,7 +569,8 @@ fun CreateNoteScreen(navController: NavController) {
                         markdownContent = content,
                         plainContent = content,
                         gallery = emptyList(),
-                        hasVideo = false
+                        hasVideo = videoUrl.isNotBlank(),
+                        videoUrl = videoUrl
                     )
 
                     NotesMockRepository.add(newNote)
