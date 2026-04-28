@@ -74,6 +74,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.polinotas.R
+import com.example.polinotas.data.ProfileImageManager
 import com.example.polinotas.ui.theme.AzulPrincipal
 import com.example.polinotas.ui.theme.Amarillo
 import kotlinx.coroutines.launch
@@ -133,6 +134,9 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
     var editableImageUrl by remember(note.id) { mutableStateOf(note.imageUrl) }
     var editableVideoUrl by remember(note.id) { mutableStateOf(note.videoUrl) }
 
+    // Foto de perfil compartida
+    val profileImageUri = remember { ProfileImageManager.getProfileImageUri() }
+
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -180,13 +184,27 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.perfil),
-                        contentDescription = "Perfil",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
+                    if (profileImageUri != null) {
+                        AsyncImage(
+                            model = profileImageUri,
+                            contentDescription = "Foto de perfil personalizada",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.perfil),
+                            contentDescription = "Perfil",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 

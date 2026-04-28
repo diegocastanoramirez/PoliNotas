@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import com.example.polinotas.R
+import com.example.polinotas.data.ProfileImageManager
 import com.example.polinotas.data.UserConfig
 import com.example.polinotas.ui.components.InfoCard
 import com.example.polinotas.ui.theme.*
@@ -71,13 +72,15 @@ fun ProfileScreen(title: String, navController: NavController) {
     // IDENTIFICADORES - ESTADOS PARA AMPLIAR Y CAMBIAR FOTO
     // ═══════════════════════════════════════════════════════════════════════════
     var showImageDialog by remember { mutableStateOf(false) }
-    var selectedImageUri by remember { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf(ProfileImageManager.getProfileImageUri()) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            selectedImageUri = uri.toString()
+            val uriString = uri.toString()
+            selectedImageUri = uriString
+            ProfileImageManager.saveProfileImageUri(uriString)
             showImageDialog = false
         }
     }
