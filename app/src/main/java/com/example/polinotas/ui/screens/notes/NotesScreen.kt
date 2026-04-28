@@ -12,8 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Person
@@ -24,6 +26,10 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.ui.res.painterResource
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
 import com.example.polinotas.data.UserConfig
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -47,7 +53,12 @@ private fun getCategories(notes: List<NoteDetailUi>): List<String> {
  * Encabezado del drawer con perfil de usuario
  */
 @Composable
-private fun DrawerHeader(userConfig: UserConfig, onClose: () -> Unit) {
+private fun DrawerHeader(
+    userConfig: UserConfig,
+    selectedImageUri: String?,
+    onImageClick: () -> Unit,
+    onClose: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -58,20 +69,35 @@ private fun DrawerHeader(userConfig: UserConfig, onClose: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Foto de perfil con borde amarillo
+            // Foto de perfil con borde amarillo (clickeable)
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .background(Amarillo, CircleShape)
                     .padding(4.dp)
+                    .clickable { onImageClick() }
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.perfil),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                )
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Foto de perfil personalizada",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White, CircleShape)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.perfil_usuario),
+                        contentDescription = "Foto de perfil",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White, CircleShape)
+                            .clip(CircleShape)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -174,60 +200,50 @@ private fun DrawerFooter() {
 fun NotesScreen(navController: NavController) {
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: drawerState
-    // TIPO: DrawerState (estado del drawer lateral)
-    // USO: Controla si el drawer está abierto o cerrado
-    // VALOR INICIAL: DrawerValue.Closed
     // ═══════════════════════════════════════════════════════════════════════════
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: scope
-    // TIPO: CoroutineScope
-    // USO: Maneja operaciones asíncronas (abrir/cerrar drawer)
     // ═══════════════════════════════════════════════════════════════════════════
     val scope = rememberCoroutineScope()
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: notes
-    // TIPO: List<NoteDetailUi>
-    // USO: Lista de todas las notas obtenidas del repositorio
-    // FUENTE: NotesMockRepository.getAll()
     // ═══════════════════════════════════════════════════════════════════════════
     val notes = NotesMockRepository.getAll()
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: userConfig
-    // TIPO: UserConfig
-    // USO: Configuración del usuario para mostrar en el drawer
     // ═══════════════════════════════════════════════════════════════════════════
     val userConfig = remember { UserConfig.default }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: selectedCategory
-    // TIPO: String? (nullable)
-    // USO: Categoría seleccionada para filtrar notas (null = todas las notas)
     // ═══════════════════════════════════════════════════════════════════════════
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: isCategoriesExpanded
-    // TIPO: Boolean
-    // USO: Controla si el dropdown de categorías está expandido o colapsado
     // ═══════════════════════════════════════════════════════════════════════════
     var isCategoriesExpanded by remember { mutableStateOf(false) }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: categories
-    // TIPO: List<String>
-    // USO: Lista de categorías únicas extraídas de las notas
+    // IDENTIFICADORES - ESTADOS PARA AMPLIAR Y CAMBIAR FOTO DE PERFIL
+    // ═══════════════════════════════════════════════════════════════════════════
+    var showImageDialog by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<String?>(null) }
+
+    // Launcher para seleccionar imagen de la galería
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri.toString()
+            showImageDialog = false
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════════════════════
     val categories = remember(notes) { getCategories(notes) }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: filteredNotes
-    // TIPO: List<NoteDetailUi>
-    // USO: Lista de notas filtradas según la categoría seleccionada
     // ═══════════════════════════════════════════════════════════════════════════
     val filteredNotes = remember(notes, selectedCategory) {
         if (selectedCategory == null) {
@@ -238,19 +254,12 @@ fun NotesScreen(navController: NavController) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: BackHandler
-    // TIPO: Composable
-    // USO: Intercepta el botón "Atrás" del sistema para limpiar filtro antes de salir
-    // COMPORTAMIENTO: Si hay categoría seleccionada, la limpia. Si no, sale de la app
     // ═══════════════════════════════════════════════════════════════════════════
     BackHandler(enabled = selectedCategory != null) {
         selectedCategory = null
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IDENTIFICADOR: modalNavigationDrawer
-    // TIPO: ModalNavigationDrawer (drawer lateral deslizable)
-    // PROPIEDADES:
     //   - drawerState: drawerState (estado del drawer)
     //   - drawerContent: ModalDrawerSheet con contenido del menú
     // ═══════════════════════════════════════════════════════════════════════════
@@ -269,16 +278,44 @@ fun NotesScreen(navController: NavController) {
                     // Encabezado con perfil
                     DrawerHeader(
                         userConfig = userConfig,
+                        selectedImageUri = selectedImageUri,
+                        onImageClick = { showImageDialog = true },
                         onClose = {
                             scope.launch { drawerState.close() }
                         }
                     )
 
-                    // Sección "Inicio" (amarilla)
+                    // Sección "Mi Perfil" (primera opción - amarilla)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Amarillo)
+                            .clickable {
+                                navController.navigate("profile/Mi Perfil")
+                                scope.launch { drawerState.close() }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Mi Perfil",
+                            tint = AzulPrincipal,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Mi Perfil",
+                            color = AzulPrincipal,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Sección "Inicio"
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .clickable {
                                 selectedCategory = null
                                 scope.launch { drawerState.close() }
@@ -289,15 +326,15 @@ fun NotesScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = "Inicio",
-                            tint = AzulPrincipal,
+                            tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Inicio",
-                            color = AzulPrincipal,
+                            color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Medium
                         )
                     }
 
@@ -389,14 +426,10 @@ fun NotesScreen(navController: NavController) {
 
         Scaffold(
             // ═══════════════════════════════════════════════════════════════════
-            // IDENTIFICADOR: floatingActionButton (FAB)
-            // TIPO: FloatingActionButton (botón flotante circular)
-            // PROPIEDADES:
             //   - onClick: Navega a "noteCreate"
             //   - containerColor: Amarillo (#FFB300)
             //   - contentColor: AzulPrincipal (#003366) para el ícono
             //   - Icon: Icons.Default.Add (ícono de +)
-            // EVENTO: onClick → navController.navigate("noteCreate")
             // ═══════════════════════════════════════════════════════════════════
             floatingActionButton = {
                 FloatingActionButton(
@@ -412,14 +445,11 @@ fun NotesScreen(navController: NavController) {
             },
 
             // ═══════════════════════════════════════════════════════════════════
-            // IDENTIFICADOR: topBar (barra superior)
-            // TIPO: Column con Row clickeable + imagen de perfil
             // PROPIEDADES (Row clickeable):
             //   - modifier.fillMaxWidth(): Ancho completo
             //   - modifier.background(AzulPrincipal): Fondo azul
             //   - modifier.clickable: Abre el drawer al tocar
             //   - modifier.padding(16.dp): Espaciado interno
-            // EVENTO: onClick → scope.launch { drawerState.open() }
             // ═══════════════════════════════════════════════════════════════════
             topBar = {
 
@@ -439,28 +469,25 @@ fun NotesScreen(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // ═══════════════════════════════════════════════════════════
-                        // IDENTIFICADOR: profileImage
-                        // TIPO: Image (imagen circular)
-                        // PROPIEDADES:
-                        //   - painter: painterResource(R.drawable.perfil)
+                        //   - painter: painterResource(R.drawable.perfil_usuario)
                         //   - contentDescription: "Perfil"
+                        //   - contentScale: ContentScale.Crop (recorta sin deformar)
                         //   - modifier.size(40.dp): Tamaño 40dp x 40dp
                         //   - modifier.clip(CircleShape): Forma circular
                         // ═══════════════════════════════════════════════════════════
                         Image(
-                            painter = painterResource(id = R.drawable.perfil),
+                            painter = painterResource(id = R.drawable.perfil_usuario),
                             contentDescription = "Perfil",
+                            contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .size(40.dp)
+                                .background(Color.White, CircleShape)
                                 .clip(CircleShape)
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         // ═══════════════════════════════════════════════════════════
-                        // IDENTIFICADOR: appNameText
-                        // TIPO: Text
-                        // PROPIEDADES:
                         //   - text: "Poli Notas"
                         //   - color: White
                         //   - fontWeight: Bold
@@ -483,9 +510,6 @@ fun NotesScreen(navController: NavController) {
             ) {
 
                 // ═══════════════════════════════════════════════════════════════════
-                // IDENTIFICADOR: titleText
-                // TIPO: Text
-                // PROPIEDADES:
                 //   - text: "Mis Notas" o "Mis Notas - [Categoría]"
                 //   - fontSize: 28.sp
                 //   - fontWeight: Bold
@@ -503,12 +527,8 @@ fun NotesScreen(navController: NavController) {
                 )
 
                 // ═══════════════════════════════════════════════════════════════════
-                // IDENTIFICADOR: notesCountText
-                // TIPO: Text (contador de notas)
-                // PROPIEDADES:
                 //   - text: "${filteredNotes.size} notas" (dinámico según cantidad)
                 //   - color: Gray
-                // VARIABLE VINCULADA: filteredNotes.size
                 // ═══════════════════════════════════════════════════════════════════
                 Text(
                     "${filteredNotes.size} notas",
@@ -518,18 +538,104 @@ fun NotesScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // ═══════════════════════════════════════════════════════════════════
-                // IDENTIFICADOR: notesLazyColumn
-                // TIPO: LazyColumn (lista vertical con lazy loading)
-                // PROPIEDADES:
                 //   - items: filteredNotes (lista de notas filtradas por categoría)
                 //   - key: note.id (identificador único para cada item)
                 // COMPONENTE HIJO: NoteItem (composable para cada nota)
-                // EVENTO: Click en item → Navegación a detalle (en NoteItem)
                 // ═══════════════════════════════════════════════════════════════════
                 LazyColumn {
 
                     items(items = filteredNotes, key = { it.id }) { note ->
                         NoteItem(note, navController)
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DIÁLOGO: Ampliar imagen y cambiar foto de perfil
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (showImageDialog) {
+        Dialog(onDismissRequest = { showImageDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Header con botón cerrar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Foto de perfil",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(onClick = { showImageDialog = false }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cerrar",
+                                tint = AzulPrincipal
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Imagen ampliada
+                    if (selectedImageUri != null) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "Foto de perfil ampliada",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(250.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.perfil_usuario),
+                            contentDescription = "Foto de perfil ampliada",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(250.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Botón para cambiar foto
+                    Button(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AzulPrincipal
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Cambiar foto de perfil",
+                            color = Color.White
+                        )
                     }
                 }
             }

@@ -145,9 +145,6 @@ fun NoteDetailScreen(noteId: String, navController: NavController) {
         if (uri != null) editableVideoUrl = uri.toString()
     }
 
-    // IDENTIFICADOR: editableContent - Contenido editable
-    var editableContent by remember(note.id) { mutableStateOf(note.markdownContent) }
-
     LaunchedEffect(
         note.id,
         note.title,
