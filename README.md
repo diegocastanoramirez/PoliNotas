@@ -43,6 +43,13 @@ Desarrollar una aplicación Android de bloc de notas intuitiva, segura y eficien
 - Registro automático de fecha de creación
 - Filtros y etiquetas personalizadas
 
+### Gestión de Perfil
+- Editar información personal campo por campo
+- Secciones: Acerca de mí, Educación, Experiencia Laboral
+- Ampliar y cambiar foto de perfil
+- Selector de galería integrado
+- Sincronización automática de foto en toda la app
+
 ### Interfaz y Experiencia
 - Diseño intuitivo con Jetpack Compose
 - Navegación fluida entre pantallas
@@ -127,16 +134,24 @@ Desarrollar una aplicación Android de bloc de notas intuitiva, segura y eficien
 
 ### 5. Perfil (`ProfileScreen`)
 - Información del usuario:
-  - Foto de perfil circular
+  - Foto de perfil circular (clickeable)
+  - Ampliar y cambiar foto desde galería
   - Nombre, carrera, correo
-  - Acerca de mí
+  - Acerca de mí (editable)
+  - Educación: institución, título, período, descripción (editable)
+  - Experiencia Laboral: empresa, cargo, período, descripción (editable)
 - Métricas:
   - Total de notas
   - Total de proyectos
   - Semestre actual
+- Edición:
+  - Botón editar/guardar por sección
+  - OutlinedTextField para edición
+  - Estados independientes por campo
 
 **Navegación**: 
 - Botón "Volver" → Lista de notas
+- Acceso desde drawer → "Mi Perfil" (primera opción)
 
 ---
 
