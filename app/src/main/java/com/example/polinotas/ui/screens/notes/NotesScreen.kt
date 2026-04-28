@@ -30,6 +30,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.example.polinotas.data.ProfileImageManager
 import com.example.polinotas.data.UserConfig
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -227,16 +228,23 @@ fun NotesScreen(navController: NavController) {
     // IDENTIFICADORES - ESTADOS PARA AMPLIAR Y CAMBIAR FOTO DE PERFIL
     // ═══════════════════════════════════════════════════════════════════════════
     var showImageDialog by remember { mutableStateOf(false) }
-    var selectedImageUri by remember { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf(ProfileImageManager.getProfileImageUri()) }
 
     // Launcher para seleccionar imagen de la galería
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            selectedImageUri = uri.toString()
+            val uriString = uri.toString()
+            selectedImageUri = uriString
+            ProfileImageManager.saveProfileImageUri(uriString)
             showImageDialog = false
         }
+    }
+
+    // Recargar la imagen de perfil cuando se vuelve a esta pantalla
+    LaunchedEffect(Unit) {
+        selectedImageUri = ProfileImageManager.getProfileImageUri()
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -469,21 +477,29 @@ fun NotesScreen(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // ═══════════════════════════════════════════════════════════
-                        //   - painter: painterResource(R.drawable.perfil_usuario)
-                        //   - contentDescription: "Perfil"
-                        //   - contentScale: ContentScale.Crop (recorta sin deformar)
-                        //   - modifier.size(40.dp): Tamaño 40dp x 40dp
-                        //   - modifier.clip(CircleShape): Forma circular
+                        // Foto de perfil en el banner (usa la imagen personalizada si existe)
                         // ═══════════════════════════════════════════════════════════
-                        Image(
-                            painter = painterResource(id = R.drawable.perfil_usuario),
-                            contentDescription = "Perfil",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color.White, CircleShape)
-                                .clip(CircleShape)
-                        )
+                        if (selectedImageUri != null) {
+                            AsyncImage(
+                                model = selectedImageUri,
+                                contentDescription = "Foto de perfil personalizada",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(Color.White, CircleShape)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.perfil_usuario),
+                                contentDescription = "Perfil",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(Color.White, CircleShape)
+                                    .clip(CircleShape)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.width(8.dp))
 

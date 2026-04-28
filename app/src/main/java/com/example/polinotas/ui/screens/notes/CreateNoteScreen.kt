@@ -60,7 +60,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.core.net.toUri
+import coil.compose.AsyncImage
 import com.example.polinotas.R
+import com.example.polinotas.data.ProfileImageManager
 import com.example.polinotas.ui.theme.Amarillo
 import com.example.polinotas.ui.theme.AzulPrincipal
 import kotlinx.coroutines.launch
@@ -110,6 +112,9 @@ fun CreateNoteScreen(navController: NavController) {
     var imageUrl by remember { mutableStateOf("") }
     var videoUrl by remember { mutableStateOf("") }
     var categoryExpanded by remember { mutableStateOf(false) }
+
+    // Foto de perfil compartida
+    val profileImageUri = remember { ProfileImageManager.getProfileImageUri() }
 
     // IDENTIFICADOR: showNewCategoryDialog - Muestra diálogo de nueva categoría
     var showNewCategoryDialog by remember { mutableStateOf(false) }
@@ -176,13 +181,27 @@ fun CreateNoteScreen(navController: NavController) {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.perfil),
-                        contentDescription = "Perfil",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
+                    if (profileImageUri != null) {
+                        AsyncImage(
+                            model = profileImageUri,
+                            contentDescription = "Foto de perfil personalizada",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.perfil),
+                            contentDescription = "Perfil",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White, CircleShape)
+                                .clip(CircleShape)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
